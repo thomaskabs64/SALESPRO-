@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalesPro — Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #07080d;
+  --s1:     #0f1018;
+  --s2:     #171a24;
+  --s3:     #1f2232;
+  --s4:     #272b3e;
+  --gold:   #c9a94a;
+  --gold-d: rgba(201,169,74,.12);
+  --gold-b: rgba(201,169,74,.22);
+  --ref:    #4fb3d4;
+  --green:  #4caf6e;
+  --green-d:rgba(76,175,110,.08);
+  --green-b:rgba(76,175,110,.22);
+  --red:    #c94a4a;
+  --red-d:  rgba(201,74,74,.10);
+  --red-b:  rgba(201,74,74,.22);
+  --tx:     #e8e9ee;
+  --tx2:    #9da3bc;
+  --tx3:    #5c6278;
+  --bdr:    rgba(255,255,255,.07);
+  --r:      10px;
+  --rl:     14px;
+  --rs:     7px;
+  --fu:     'Inter', system-ui, sans-serif;
+  --fm:     'IBM Plex Mono', monospace;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body {
+  background:var(--bg); color:var(--tx);
+  font-family:var(--fu); font-size:14px;
+  line-height:1.5; -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+svg { display:block; flex-shrink:0; }
+button {
+  font-family:var(--fu); cursor:pointer; border:none;
+  border-radius:var(--rs); transition:all .15s;
+  display:inline-flex; align-items:center; gap:6px; white-space:nowrap;
+}
+
+/* ══ TOPBAR ══ */
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px; height:52px;
+  background:var(--s1); border-bottom:1px solid var(--bdr);
+  position:sticky; top:0; z-index:50;
+}
+.tbar-left { display:flex; align-items:center; gap:10px; }
+.tbar-logo {
+  display:flex; align-items:center; gap:8px;
+  font-size:15px; font-weight:700; letter-spacing:-0.3px;
+}
+.tbar-logo-mark {
+  width:28px; height:28px; border-radius:7px;
+  
+  display:flex; align-items:center; justify-content:center;
+}
+.tbar-logo span { color:var(--gold); }
+.tbar-badge {
+  background:var(--s3); color:var(--tx3);
+  font-size:10px; font-weight:600; letter-spacing:0.5px;
+  padding:3px 9px; border-radius:20px; border:1px solid var(--bdr);
+  text-transform:uppercase;
+  display:flex; align-items:center; gap:5px;
+}
+.tbar-right { display:flex; align-items:center; gap:8px; }
+.tbar-user {
+  display:flex; align-items:center; gap:7px;
+  font-size:12px; color:var(--tx2);
+}
+.tbar-avatar {
+  width:26px; height:26px; border-radius:6px;
+  background:linear-gradient(135deg, #9400d3, #7b00b0);
+  color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700;
+  box-shadow:0 2px 8px rgba(148,0,211,.4);
+}
+.tbar-signout {
+  background:var(--s3); color:var(--tx3);
+  font-size:11px; font-weight:500;
+  padding:5px 10px; border-radius:var(--rs);
+}
+.tbar-signout:hover { color:var(--red); background:var(--red-d); }
+
+/* ══ PAGE WRAPPER ══ */
+.page {
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-start;
+  padding:24px 16px 40px;
+  min-height:calc(100vh - 52px);
+}
+.card-wrap {
+  width:100%; max-width:600px;
+  display:flex; flex-direction:column; gap:14px;
+}
+
+/* ══ STATUS CARD ══ */
+.status-card {
+  background:var(--s1); border:1px solid var(--bdr);
+  border-radius:var(--rl); padding:40px 24px;
+  text-align:center;
+  display:flex; flex-direction:column; align-items:center;
+  transition:background .25s, border-color .25s;
+}
+.status-card.ok   { background:var(--green-d); border-color:var(--green-b); }
+.status-card.fail { background:var(--red-d);   border-color:var(--red-b);   }
+
+.sc-icon-wrap {
+  width:72px; height:72px; border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:18px;
+  transition:background .25s;
+}
+.status-card.idle .sc-icon-wrap { background:var(--s3); }
+.status-card.ok   .sc-icon-wrap { background:rgba(76,175,110,.15); }
+.status-card.fail .sc-icon-wrap { background:rgba(201,74,74,.15); }
+
+.sc-title {
+  font-size:22px; font-weight:700; letter-spacing:-0.4px;
+  margin-bottom:6px;
+  transition:color .2s;
+}
+.status-card.idle .sc-title { color:var(--tx3); }
+.status-card.ok   .sc-title { color:var(--green); }
+.status-card.fail .sc-title { color:var(--red); }
+
+.sc-detail {
+  font-size:13px; color:var(--tx2); line-height:1.7;
+  max-width:380px;
+}
+
+/* ══ CHECKOUT CARD ══ */
+.checkout-card {
+  background:var(--s1); border:1px solid var(--bdr);
+  border-radius:var(--rl); overflow:hidden;
+}
+.cc-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px 14px; border-bottom:1px solid var(--bdr);
+  flex-wrap:wrap; gap:10px;
+}
+.cc-title {
+  font-size:15px; font-weight:700; letter-spacing:-0.2px;
+  display:flex; align-items:center; gap:9px;
+}
+.mode-toggle {
+  display:flex; background:var(--s3); border-radius:8px;
+  padding:3px; gap:2px;
+}
+.mode-btn {
+  padding:6px 14px; font-size:11px; font-weight:600;
+  background:transparent; color:var(--tx3);
+  border-radius:6px; letter-spacing:0.2px;
+  transition:all .15s; font-family:var(--fu);
+}
+.mode-btn.active {
+  background:var(--s1); color:var(--tx);
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.cc-body { padding:20px; }
+.cc-input-row { display:flex; gap:10px; }
+.cc-input {
+  flex:1; background:var(--s3); border:1.5px solid var(--bdr);
+  border-radius:var(--rs); color:var(--tx);
+  font-family:var(--fu); font-size:15px;
+  padding:13px 16px; outline:none;
+  transition:border-color .15s;
+}
+.cc-input:focus { border-color:var(--gold); background:var(--s4); }
+.cc-input::placeholder { color:var(--tx3); }
+.cc-btn {
+  background:var(--gold); color:#07080d;
+  font-weight:700; font-size:13.5px;
+  padding:13px 22px; border-radius:var(--rs);
+}
+.cc-btn:hover { background:#d9bb5a; transform:translateY(-1px); box-shadow:0 4px 16px rgba(201,169,74,.25); }
+.cc-hint {
+  margin-top:10px; font-size:11px; color:var(--tx3);
+}
+.cc-hint b { font-weight:600; color:var(--tx2); }
+
+/* ══ AUTH OVERLAY ══ */
+#authOverlay {
+  position:fixed; inset:0; z-index:300;
+  background: #08000f;
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+#authOverlay::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 70% 60% at 0%   0%,   rgba(148,0,211,.22) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 55% at 100% 100%,  rgba(110,0,180,.18) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 45% at 50%  0%,    rgba(255,210,0,.07) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 40% at 100%  0%,   rgba(180,0,255,.1)  0%, transparent 50%),
+    radial-gradient(ellipse 35% 30% at 0%  100%,   rgba(120,0,200,.1)  0%, transparent 50%);
+  pointer-events:none;
+}
+#authOverlay.gone { display:none; }
+
+.auth-card {
+  position:relative; z-index:1;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(180,80,255,.2);
+  border-radius:22px; width:100%; max-width:400px;
+  overflow:hidden;
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,255,255,.06),
+    0 0 60px rgba(148,0,211,.15),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  backdrop-filter:blur(20px);
+  animation:fadeUp .32s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes fadeUp { from{transform:translateY(16px);opacity:0} to{transform:none;opacity:1} }
+
+.ac-head {
+  background:linear-gradient(160deg, rgba(148,0,211,.2) 0%, rgba(80,0,140,.15) 100%);
+  padding:32px 28px 24px;
+  border-bottom:1px solid rgba(180,80,255,.15);
+  text-align:center; position:relative;
+}
+.ac-head::after {
+  content:'';
+  position:absolute; bottom:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(200,100,255,.3), transparent);
+}
+
+.ac-logo {
+  display:inline-flex; align-items:center; gap:10px;
+  font-size:20px; font-weight:700; letter-spacing:-0.4px;
+  margin-bottom:6px; color:#fff;
+}
+.ac-logo-mark {
+  width:36px; height:36px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+}
+.ac-logo span {
+  background:linear-gradient(90deg, #f5c400, #ffd93d);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.ac-sub { font-size:12px; color:rgba(255,255,255,.35); margin-top:2px; }
+
+.ac-body { padding:26px 28px 30px; }
+.ac-field { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.ac-field label {
+  font-size:11px; font-weight:600; color:rgba(255,255,255,.4);
+  letter-spacing:0.5px; text-transform:uppercase;
+}
+.ac-field input {
+  background:rgba(0,0,0,.3);
+  border:1px solid rgba(180,80,255,.15);
+  border-radius:var(--rs); color:#fff;
+  font-family:var(--fu); font-size:14px;
+  padding:12px 13px; outline:none;
+  transition:border-color .15s, background .15s, box-shadow .15s;
+  width:100%;
+}
+.ac-field input:focus {
+  border-color:rgba(180,80,255,.6);
+  background:rgba(148,0,211,.08);
+  box-shadow:0 0 0 3px rgba(148,0,211,.12);
+}
+.ac-field input::placeholder { color:rgba(255,255,255,.2); }
+
+.ac-err {
+  background:rgba(201,74,74,.12); border:1px solid rgba(201,74,74,.3);
+  border-radius:var(--rs); padding:10px 13px;
+  font-size:12px; color:#f87272;
+  display:none; align-items:center; gap:7px; margin-bottom:14px;
+}
+.ac-err.show { display:flex; }
+
+.ac-btn {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg, #9400d3 0%, #7b00b0 100%);
+  color:#fff; font-weight:700; font-size:14px;
+  border-radius:var(--rs);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition:all .18s;
+  box-shadow:0 4px 20px rgba(148,0,211,.4);
+}
+.ac-btn:hover {
+  background:linear-gradient(135deg, #b000f5 0%, #9400d3 100%);
+  transform:translateY(-1px); box-shadow:0 6px 24px rgba(148,0,211,.55);
+}
+.ac-note { margin-top:14px; font-size:11px; color:rgba(255,255,255,.25); text-align:center; line-height:1.8; }
+
+/* ══ SOLD BANNER ══ */
+#soldBanner {
+  position:fixed; top:64px; left:50%;
+  transform:translateX(-50%) translateY(-18px);
+  opacity:0; z-index:200; pointer-events:none;
+  width:min(440px, calc(100vw - 24px));
+  background:var(--s2); border:1px solid var(--green-b);
+  border-radius:var(--rl);
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  overflow:hidden;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1), opacity .28s ease;
+}
+#soldBanner.show {
+  transform:translateX(-50%) translateY(0);
+  opacity:1; pointer-events:auto;
+}
+.sbn-bar { height:3px; background:linear-gradient(90deg,var(--green),rgba(76,175,110,.2)); }
+.sbn-bar.run { animation:prog 4s linear forwards; }
+@keyframes prog { from{width:100%} to{width:0} }
+.sbn-body {
+  display:flex; align-items:center; gap:14px;
+  padding:15px 18px;
+}
+.sbn-icon {
+  width:42px; height:42px; flex-shrink:0;
+  background:rgba(76,175,110,.15); border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+}
+.sbn-content { flex:1; }
+.sbn-label {
+  font-size:10px; font-weight:600; color:var(--green);
+  letter-spacing:0.5px; text-transform:uppercase; margin-bottom:3px;
+  display:flex; align-items:center; gap:5px;
+}
+.sbn-dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--green);
+  animation:pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.7)} }
+.sbn-name { font-size:15px; font-weight:700; letter-spacing:-0.2px; }
+.sbn-meta { font-size:11px; color:var(--tx3); margin-top:2px; font-family:var(--fm); }
+.sbn-price {
+  font-family:var(--fm); font-size:18px; font-weight:700;
+  color:var(--gold); white-space:nowrap;
+}
+.sbn-close {
+  background:none; color:var(--tx3); padding:4px; border-radius:4px; flex-shrink:0;
+}
+.sbn-close:hover { color:var(--tx); background:var(--s3); }
+
+/* ══ CAMERA SCANNER ══ */
+.cam-btn {
+  background:linear-gradient(135deg,#9400d3,#7b00b0);
+  color:#fff; font-weight:700; font-size:13px;
+  padding:13px 18px; border-radius:var(--rs);
+  display:flex; align-items:center; gap:7px;
+  box-shadow:0 4px 16px rgba(148,0,211,.35);
+  flex-shrink:0;
+}
+.cam-btn:hover { background:linear-gradient(135deg,#b000f5,#9400d3); transform:translateY(-1px); }
+.cam-btn:active { transform:scale(.97); }
+
+#camOverlay {
+  position:fixed; inset:0; z-index:500;
+  background:#000;
+  display:none; flex-direction:column;
+  align-items:center; justify-content:flex-start;
+}
+#camOverlay.open { display:flex; }
+#camVideo {
+  width:100%; max-width:600px;
+  height:100vh; object-fit:cover;
+}
+.cam-ui {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.cam-frame {
+  width:260px; height:160px;
+  border:2px solid rgba(245,196,0,.8);
+  border-radius:14px;
+  box-shadow:0 0 0 4000px rgba(0,0,0,.55);
+  position:relative;
+}
+.cam-frame::before,.cam-frame::after {
+  content:'';
+  position:absolute;
+  width:28px; height:28px;
+  border-color:var(--gold);
+  border-style:solid;
+}
+.cam-frame::before { top:-2px; left:-2px; border-width:3px 0 0 3px; border-radius:10px 0 0 0; }
+.cam-frame::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 10px 0; }
+.cam-line {
+  position:absolute; left:8px; right:8px; height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  animation:camScan 1.8s ease-in-out infinite;
+  top:50%; transform:translateY(-50%);
+}
+@keyframes camScan { 0%,100%{top:10%} 50%{top:88%} }
+.cam-label {
+  margin-top:24px; font-size:13px; font-weight:600;
+  color:rgba(255,255,255,.7); letter-spacing:0.3px;
+  text-align:center; padding:0 20px;
+}
+.cam-close-btn {
+  position:absolute; top:20px; right:20px;
+  background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.2);
+  color:#fff; border-radius:50%; width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; cursor:pointer; pointer-events:auto;
+  font-family:var(--fu); z-index:10;
+}
+.cam-torch-btn {
+  position:absolute; top:20px; left:20px;
+  background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.2);
+  color:#fff; border-radius:50%; width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; pointer-events:auto; z-index:10;
+}
+.cam-torch-btn.on { background:rgba(245,196,0,.3); border-color:var(--gold); color:var(--gold); }
+.cam-result-flash {
+  position:absolute; inset:0;
+  background:rgba(34,197,94,.25);
+  opacity:0; pointer-events:none;
+  transition:opacity .15s;
+}
+.cam-result-flash.flash { opacity:1; }
+
+/* ══ SUMMARY PANEL ══ */
+.sum-panel {
+  display:none; padding:16px;
+  flex-direction:column; gap:14px;
+}
+.sum-panel.open { display:flex; }
+.sum-panel-hdr {
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
+}
+.sum-panel-title {
+  font-size:13px; font-weight:700; display:flex; align-items:center; gap:7px;
+}
+.sum-panel-date {
+  font-size:10px; font-family:var(--fm); color:var(--tx3);
+  background:rgba(201,169,74,.1); border:1px solid rgba(201,169,74,.2);
+  color:var(--gold); padding:2px 8px; border-radius:10px;
+}
+.sum-actions { display:flex; gap:7px; flex-wrap:wrap; }
+.sum-btn {
+  background:linear-gradient(135deg,#9400d3,#7b00b0);
+  color:#fff; font-size:11px; font-weight:600;
+  padding:7px 13px; border-radius:var(--rs);
+  display:flex; align-items:center; gap:5px;
+  font-family:var(--fu); cursor:pointer;
+  box-shadow:0 3px 10px rgba(148,0,211,.3);
+}
+.sum-btn.outline {
+  background:transparent; color:var(--red);
+  border:1px solid rgba(239,68,68,.3);
+  box-shadow:none;
+}
+.sum-stat-row {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+}
+.sum-s {
+  background:var(--s2); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; padding:12px 14px;
+}
+.sum-s .sl { font-size:10px; color:var(--tx3); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+.sum-s .sv { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+.sv.green { color:#22c55e; } .sv.gold { color:var(--gold); } .sv.pur { color:#c084fc; }
+.sum-cat-block {
+  background:var(--s2); border:1px solid rgba(255,255,255,.06); border-radius:10px; overflow:hidden;
+}
+.sum-cat-hdr {
+  background:rgba(255,255,255,.03); padding:10px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:12px; font-weight:700;
+}
+.sum-cat-meta-s { font-size:10px; font-family:var(--fm); color:var(--tx3); }
+.sum-item-row {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 14px; border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:11.5px;
+}
+.sum-item-row:last-child { border-bottom:none; }
+.sum-item-name { flex:1; font-weight:500; }
+.sum-item-ref { font-size:10px; font-family:var(--fm); color:var(--ref); min-width:70px; }
+.sum-item-price { font-family:var(--fm); color:var(--gold); min-width:52px; text-align:right; font-size:11px; }
+.sum-item-qty {
+  background:rgba(34,197,94,.12); color:#4ade80; border:1px solid rgba(34,197,94,.25);
+  font-size:10px; font-weight:700; font-family:var(--fm);
+  width:22px; height:22px; border-radius:5px;
+  display:flex; align-items:center; justify-content:center;
+}
+.sum-empty-s {
+  text-align:center; padding:28px 16px; color:var(--tx3); font-size:12px;
+}
+.sum-reset-note-s { font-size:10px; color:var(--tx3); text-align:center; font-family:var(--fm); }
+
+/* ══ DASHBOARD CLOCK CARD ══ */
+.dashboard-card {
+  background:linear-gradient(135deg,#1a0028 0%,#2d0050 50%,#1a0040 100%);
+  border:1px solid rgba(148,0,211,.25);
+  border-radius:var(--rl); padding:18px 20px;
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:12px;
+  position:relative; overflow:hidden;
+}
+.dashboard-card::before {
+  content:''; position:absolute; top:-40px; right:-40px;
+  width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle,rgba(148,0,211,.18) 0%,transparent 70%);
+  pointer-events:none;
+}
+.dash-greet-label { font-size:10px; color:rgba(214,143,255,.7); font-weight:600; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:4px; }
+.dash-greet-name  { font-size:18px; font-weight:700; letter-spacing:-0.3px; color:#fff; }
+.dash-greet-name span { background:linear-gradient(90deg,#f5c400,#ffd93d); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.dash-greet-sub   { font-size:11px; color:rgba(255,255,255,.35); margin-top:3px; }
+.dash-clock { text-align:right; }
+.dash-clock-time  { font-family:var(--fm); font-size:22px; font-weight:700; letter-spacing:1px; color:var(--gold); }
+.dash-clock-date  { font-size:10px; color:rgba(255,255,255,.3); font-family:var(--fm); margin-top:3px; }
+
+/* ══ STAT GRID ══ */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.stat-box { background:var(--s2); border:1px solid var(--bdr); border-radius:var(--r); padding:12px 14px; }
+.sb-label { font-size:10px; color:var(--tx3); font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:5px; display:flex; align-items:center; gap:5px; }
+.sb-val { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+.sb-val.green { color:var(--green); } .sb-val.gold { color:var(--gold); }
+
+/* ══ BEST PERFORMERS ══ */
+.performers-card {
+  background:var(--s1); border:1px solid var(--bdr);
+  border-radius:var(--rl); overflow:hidden;
+}
+.perf-card-hdr {
+  padding:12px 16px; border-bottom:1px solid var(--bdr);
+  background:var(--s2); font-size:10px; font-weight:600;
+  color:var(--tx3); letter-spacing:0.5px; text-transform:uppercase;
+  display:flex; align-items:center; gap:7px;
+}
+.perf-row {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 16px; border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:12px;
+}
+.perf-row:last-child { border-bottom:none; }
+.perf-rank {
+  width:20px; height:20px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; font-family:var(--fm);
+}
+.perf-rank.r1 { background:rgba(201,169,74,.2); color:var(--gold); }
+.perf-rank.r2 { background:rgba(255,255,255,.06); color:var(--tx2); }
+.perf-rank.r3 { background:rgba(255,255,255,.04); color:var(--tx3); }
+.perf-rank.r4,.perf-rank.r5 { background:transparent; color:var(--tx3); }
+.perf-name { flex:1; font-weight:500; color:var(--tx); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.perf-meta { font-size:10px; color:var(--tx3); white-space:nowrap; }
+.perf-rev  { font-family:var(--fm); color:var(--green); font-weight:600; white-space:nowrap; font-size:11px; }
+.perf-empty { padding:20px 16px; text-align:center; font-size:11px; color:var(--tx3); }
+.performers-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:480px){ .performers-grid { grid-template-columns:1fr; } }
+
+/* ══ CHANGE CALCULATOR ══ */
+.change-calc {
+  background:var(--s2); border:1px solid var(--gold-b);
+  border-radius:var(--rl); padding:16px; margin-top:0;
+  display:none;
+}
+.change-calc.show { display:block; }
+.change-calc-title {
+  font-size:12px; font-weight:700; color:var(--tx);
+  margin-bottom:12px; display:flex; align-items:center; gap:7px;
+}
+.change-row { display:flex; gap:8px; align-items:flex-end; flex-wrap:wrap; }
+.change-input-wrap { display:flex; flex-direction:column; gap:5px; flex:1; min-width:110px; }
+.change-input-wrap label { font-size:10px; color:var(--tx3); font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
+.change-result {
+  margin-top:12px; padding:12px 14px; border-radius:var(--r);
+  background:rgba(76,175,110,.08); border:1px solid rgba(76,175,110,.2);
+  display:none; align-items:center; justify-content:space-between;
+}
+.change-result.show { display:flex; }
+.change-result.under { background:var(--red-d); border-color:var(--red-b); }
+.cr-label { font-size:10px; color:var(--tx3); margin-bottom:3px; }
+.cr-amount { font-family:var(--fm); font-size:22px; font-weight:700; color:var(--green); letter-spacing:-0.5px; }
+.change-result.under .cr-amount { color:var(--red); }
+.ctotal-card {
+  background:var(--s1); border:1px solid var(--bdr);
+  border-radius:var(--rl); overflow:hidden;
+}
+.ctotal-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px; border-bottom:1px solid var(--bdr);
+  flex-wrap:wrap; gap:10px;
+}
+.ctotal-title {
+  font-size:15px; font-weight:700; letter-spacing:-0.2px;
+  display:flex; align-items:center; gap:9px;
+}
+.ctotal-count {
+  font-size:10px; font-weight:700; letter-spacing:0.4px; text-transform:uppercase;
+  background:var(--gold-d); border:1px solid var(--gold-b); color:var(--gold);
+  padding:3px 9px; border-radius:20px; font-family:var(--fm);
+}
+.ctotal-reset-btn {
+  background:var(--red-d); color:var(--red);
+  border:1px solid var(--red-b);
+  font-size:11.5px; font-weight:600;
+  padding:7px 14px; border-radius:var(--rs);
+  display:flex; align-items:center; gap:6px;
+  font-family:var(--fu); cursor:pointer; transition:all .15s;
+}
+.ctotal-reset-btn:hover { background:rgba(201,74,74,.18); transform:translateY(-1px); }
+
+.ctotal-body { padding:0; }
+.ctotal-empty {
+  padding:22px 20px; text-align:center;
+  font-size:12px; color:var(--tx3);
+  display:flex; align-items:center; justify-content:center; gap:7px;
+}
+.ctotal-list { max-height:240px; overflow-y:auto; }
+.ctotal-list::-webkit-scrollbar { width:4px; }
+.ctotal-list::-webkit-scrollbar-track { background:transparent; }
+.ctotal-list::-webkit-scrollbar-thumb { background:var(--s4); border-radius:2px; }
+
+.ctotal-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 20px; border-bottom:1px solid var(--bdr);
+  font-size:12.5px; transition:background .1s;
+}
+.ctotal-item:last-child { border-bottom:none; }
+.ctotal-item:hover { background:var(--s2); }
+.ctotal-item-num {
+  font-size:10px; font-family:var(--fm); color:var(--tx3);
+  min-width:18px; text-align:center;
+}
+.ctotal-item-name { flex:1; font-weight:500; color:var(--tx); }
+.ctotal-item-cat { font-size:10px; color:var(--tx3); }
+.ctotal-item-price {
+  font-family:var(--fm); font-size:13px; font-weight:600; color:var(--gold);
+  white-space:nowrap;
+}
+
+.ctotal-footer {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 20px;
+  background:var(--s2); border-top:1px solid var(--bdr);
+}
+.ctotal-footer-label {
+  font-size:12px; font-weight:600; color:var(--tx2);
+  display:flex; align-items:center; gap:7px;
+}
+.ctotal-total-value {
+  font-family:var(--fm); font-size:24px; font-weight:700;
+  color:var(--gold); letter-spacing:-0.5px;
+  transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.ctotal-total-value.bump { transform:scale(1.08); }
+
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH ══ -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="ac-head">
+      <div class="ac-logo">
+        <div class="ac-logo-mark"><img src="data:image/png;base64,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" style="width:38px;height:38px;border-radius:9px;display:block;object-fit:cover;" alt="logo"/></div>
+        Sales<span>Pro</span>
+      </div>
+      <div class="ac-sub">Sign in to access the Scanner</div>
+    </div>
+    <div class="ac-body">
+      <div class="ac-err" id="acErr">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="acErrMsg"></span>
+      </div>
+      <div class="ac-field">
+        <label>Email Address</label>
+        <input type="email" id="acEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="ac-field">
+        <label>Password</label>
+        <input type="password" id="acPass" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <button class="ac-btn" onclick="doLogin()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In to Scanner
+      </button>
+      <div class="ac-note">Use the same account from the main <strong>SalesPro</strong> app.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="appWrap" style="display:none">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tbar-left">
+      <div class="tbar-logo">
+        <div class="tbar-logo-mark"><img src="data:image/png;base64,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" style="width:28px;height:28px;border-radius:7px;display:block;object-fit:cover;" alt="logo"/></div>
+        Sales<span>Pro</span>
+      </div>
+      <span class="tbar-badge">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/></svg>
+        Scanner
+      </span>
+    </div>
+    <div class="tbar-right">
+      <div class="tbar-user">
+        <div class="tbar-avatar" id="tbAvatar">?</div>
+        <span id="tbName">—</span>
+      </div>
+      <button class="tbar-signout" style="background:rgba(148,0,211,.15);color:#c084fc;border:1px solid rgba(148,0,211,.25);" onclick="toggleSummaryPanel()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Summary
+      </button>
+      <button class="tbar-signout" onclick="doSignOut()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+  <!-- Page -->
+  <div class="page">
+    <div class="card-wrap">
+
+      <!-- Dashboard clock card -->
+      <div class="dashboard-card">
+        <div class="dash-greet">
+          <div class="dash-greet-label">Scanner Dashboard</div>
+          <div class="dash-greet-name">Welcome, <span id="dashName">—</span></div>
+          <div class="dash-greet-sub" id="dashGreetSub">Good morning</div>
+        </div>
+        <div class="dash-clock">
+          <div class="dash-clock-time" id="dashClockTime">00:00:00</div>
+          <div class="dash-clock-date" id="dashClockDate">—</div>
+        </div>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="stat-grid" id="statGrid"></div>
+
+      <!-- Best Performers -->
+      <div class="performers-grid" id="performersSection" style="display:none">
+        <div class="performers-card">
+          <div class="perf-card-hdr">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            Top Items by Revenue
+          </div>
+          <div id="topItemsList"><div class="perf-empty">No sold items yet</div></div>
+        </div>
+        <div class="performers-card">
+          <div class="perf-card-hdr">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            Top Categories
+          </div>
+          <div id="topCatsList"><div class="perf-empty">No category sales yet</div></div>
+        </div>
+      </div>
+
+      <!-- Status display -->
+      <div class="status-card idle" id="statusCard">
+        <div class="sc-icon-wrap">
+          <span id="scIcon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+              <rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/>
+              <rect x="7" y="14" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/>
+            </svg>
+          </span>
+        </div>
+        <div class="sc-title" id="scTitle">Ready to Scan</div>
+        <div class="sc-detail" id="scDetail">Scan a barcode or enter a referral number below</div>
+      </div>
+
+      <!-- Customer Total Calculator -->
+      <div class="ctotal-card" id="ctotalCard">
+        <div class="ctotal-header">
+          <div class="ctotal-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Customer Total
+            <span class="ctotal-count" id="ctotalCount">0 items</span>
+          </div>
+          <button class="ctotal-reset-btn" onclick="resetCustomerTotal()" id="ctotalResetBtn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+            New Customer
+          </button>
+        </div>
+        <div class="ctotal-body">
+          <div class="ctotal-empty" id="ctotalEmpty">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Scan items to see the customer total
+          </div>
+          <div class="ctotal-list" id="ctotalList" style="display:none"></div>
+        </div>
+        <div class="ctotal-footer">
+          <div class="ctotal-footer-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Total to charge
+          </div>
+          <div class="ctotal-total-value" id="ctotalTotal">K0.00</div>
+        </div>
+        <!-- Change Calculator -->
+        <div class="change-calc" id="changeCalc">
+          <div class="change-calc-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Change Calculator
+          </div>
+          <div class="change-row">
+            <div class="change-input-wrap">
+              <label>Amount Given by Customer</label>
+              <input type="number" id="amountGiven" class="cc-input" placeholder="0.00"
+                min="0" step="0.01" style="font-family:var(--fm);font-size:16px"
+                oninput="calcChange()" />
+            </div>
+            <button class="cc-btn" onclick="calcChange()" style="padding:12px 16px">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Calc
+            </button>
+          </div>
+          <div class="change-result" id="changeResult">
+            <div>
+              <div class="cr-label" id="changeLabel">Change to give back</div>
+              <div class="cr-amount" id="changeAmount">K0.00</div>
+            </div>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" id="changeIcon" style="color:var(--green)"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Checkout card -->
+      <div class="checkout-card">
+        <div class="cc-header">
+          <div class="cc-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round">
+              <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
+              <line x1="7" y1="7" x2="7" y2="17"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/>
+            </svg>
+            Checkout
+          </div>
+          <div class="mode-toggle">
+            <button class="mode-btn active" id="modeA" onclick="setMode('barcode')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="7" x2="7" y2="17"/><line x1="12" y1="7" x2="12" y2="17"/><line x1="17" y1="7" x2="17" y2="17"/></svg>
+              Barcode
+            </button>
+            <button class="mode-btn" id="modeB" onclick="setMode('ref')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+              Ref. No.
+            </button>
+            <button class="mode-btn" id="modeC" onclick="setMode('lookup')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Lookup
+            </button>
+          </div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-input-row">
+            <input type="text" class="cc-input" id="mainInput"
+              placeholder="Scan barcode…"
+              onkeydown="if(event.key==='Enter')handleInput()" />
+            <button class="cam-btn" onclick="openCamera()" title="Scan with camera">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              Scan
+            </button>
+            <button class="cc-btn" onclick="handleInput()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Confirm
+            </button>
+          </div>
+          <div class="cc-hint" id="ccHint">
+            <b>Barcode mode</b> — tap <b>Scan</b> to use camera, or type manually. Referral numbers also accepted.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ SUMMARY PANEL ══ -->
+  <div class="sum-panel" id="sumPanel">
+    <div class="sum-panel-hdr">
+      <div class="sum-panel-title">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Daily Summary
+        <span class="sum-panel-date" id="sumDateBadge"></span>
+      </div>
+      <div class="sum-actions">
+        <button class="sum-btn outline" onclick="resetSummaryScanner()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+          Reset
+        </button>
+        <button class="sum-btn" onclick="exportSummaryPDFScanner()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
+    <div class="sum-stat-row" id="sumStatRow"></div>
+    <div id="sumContent"></div>
+    <div class="sum-reset-note-s" id="sumResetNote"></div>
+  </div>
+
+</div><!-- /appWrap -->
+
+<!-- ══ CAMERA OVERLAY ══ -->
+<div id="camOverlay">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div class="cam-ui">
+    <div class="cam-frame">
+      <div class="cam-line"></div>
+    </div>
+    <div class="cam-label">Point camera at barcode</div>
+  </div>
+  <button class="cam-torch-btn" id="torchBtn" onclick="toggleTorch()" title="Toggle flashlight">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M8 6l8 4-4 8-8-4z"/></svg>
+  </button>
+  <button class="cam-close-btn" onclick="closeCamera()">✕</button>
+  <div class="cam-result-flash" id="camFlash"></div>
+</div>
+
+<!-- ══ SOLD BANNER ══ -->
+<div id="soldBanner">
+  <div class="sbn-bar" id="sbnBar"></div>
+  <div class="sbn-body">
+    <div class="sbn-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="sbn-content">
+      <div class="sbn-label"><span class="sbn-dot"></span> Item Sold Out</div>
+      <div class="sbn-name" id="sbnName">—</div>
+      <div class="sbn-meta" id="sbnMeta">—</div>
+    </div>
+    <div class="sbn-price" id="sbnPrice">—</div>
+    <button class="sbn-close" onclick="closeBanner()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/zbar-wasm@0.9.15/dist/zbar.min.js"></script>
+
+<script type="module">
+import { initializeApp }                       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBIipLg3KhULgln_jMLeNDl5W6upKPD3T0",
+  authDomain:        "swift-ride-1a115.firebaseapp.com",
+  databaseURL:       "https://swift-ride-1a115-default-rtdb.firebaseio.com",
+  projectId:         "swift-ride-1a115",
+  storageBucket:     "swift-ride-1a115.firebasestorage.app",
+  messagingSenderId: "410499651957",
+  appId:             "1:410499651957:web:fc71c976844b512bcfdb3c"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── State ──
+let currentUser = null;
+let categories  = [];
+let scanMode    = 'barcode';
+let bannerTimer = null;
+let resetTimer  = null;
+let _unsubCats  = null;
+let customerItems = [];   // running list for current customer checkout
+
+// ── Helpers ──
+function emailToKey(e){ return e.replace(/\./g,','); }
+function hashPass(p){ let h=0; for(let i=0;i<p.length;i++){h=((h<<5)-h)+p.charCodeAt(i);h|=0;} return 'H'+Math.abs(h).toString(36); }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function fbGetUser(email){
+  const snap = await get(ref(db,`users/${emailToKey(email)}`));
+  return snap.exists() ? snap.val() : null;
+}
+function getSession(){ return sessionStorage.getItem('sp_session')||null; }
+function setSession(e){ sessionStorage.setItem('sp_session',e); }
+function clearSes(){ sessionStorage.removeItem('sp_session'); }
+
+function subscribeCats(){
+  if(_unsubCats) _unsubCats();
+  const catRef = ref(db,`categories/${emailToKey(currentUser.email)}`);
+  _unsubCats = onValue(catRef, snap=>{
+    categories = snap.exists() ? Object.values(snap.val()) : [];
+    renderStats();
+    renderCatBrowser();
+  });
+}
+function unsubscribeCats(){ if(_unsubCats){_unsubCats();_unsubCats=null;} categories=[]; }
+
+async function saveData(){
+  const catRef = ref(db,`categories/${emailToKey(currentUser.email)}`);
+  if(categories.length===0){ await set(catRef,null); return; }
+  const obj={};
+  categories.forEach(c=>{ obj[c.id]=c; });
+  await set(catRef,obj);
+}
+
+// ── Auth ──
+async function doLogin(){
+  const email = document.getElementById('acEmail').value.trim().toLowerCase();
+  const pass  = document.getElementById('acPass').value;
+  const err   = msg=>{ document.getElementById('acErrMsg').textContent=msg; document.getElementById('acErr').classList.add('show'); };
+  document.getElementById('acErr').classList.remove('show');
+  if(!email){ err('Please enter your email.'); return; }
+  if(!pass) { err('Please enter your password.'); return; }
+  err('Signing in…');
+  document.getElementById('acErr').style.cssText='background:rgba(148,0,211,.1);border-color:rgba(148,0,211,.3);color:#d68fff;display:flex';
+  const user = await fbGetUser(email);
+  document.getElementById('acErr').style.cssText='';
+  document.getElementById('acErr').classList.remove('show');
+  if(!user)                            { err('No account found with this email.'); return; }
+  if(user.password!==hashPass(pass))   { err('Incorrect password.'); return; }
+  if(user.status==='pending')          { err('Your account is pending admin approval.'); return; }
+  if(user.status==='declined')         { err('Your account was declined. Contact your administrator.'); return; }
+  setSession(email); currentUser=user; enterApp();
+}
+window.doLogin = doLogin;
+
+function doSignOut(){
+  clearSes(); currentUser=null; unsubscribeCats();
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('authOverlay').classList.remove('gone');
+  document.getElementById('acEmail').value='';
+  document.getElementById('acPass').value='';
+  document.getElementById('acErr').classList.remove('show');
+}
+window.doSignOut = doSignOut;
+
+function enterApp(){
+  document.getElementById('authOverlay').classList.add('gone');
+  document.getElementById('appWrap').style.display='block';
+  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('tbAvatar').textContent = initials;
+  document.getElementById('tbName').textContent   = currentUser.name.split(' ')[0];
+  // Dashboard greeting
+  document.getElementById('dashName').textContent = currentUser.name.split(' ')[0];
+  startLiveClock();
+  subscribeCats();
+  setTimeout(()=>document.getElementById('mainInput').focus(), 200);
+}
+
+// ── Live Clock ──
+let _clockTimer = null;
+function startLiveClock(){
+  if(_clockTimer) clearInterval(_clockTimer);
+  function tick(){
+    const now  = new Date();
+    const hour = now.getHours();
+    const tod  = hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+    const timeEl = document.getElementById('dashClockTime');
+    const dateEl = document.getElementById('dashClockDate');
+    const subEl  = document.getElementById('dashGreetSub');
+    if(timeEl) timeEl.textContent = now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    if(dateEl) dateEl.textContent = now.toLocaleDateString('en-GB',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+    if(subEl)  subEl.textContent  = tod+' — ready to scan';
+  }
+  tick();
+  _clockTimer = setInterval(tick, 1000);
+}
+
+// ── Best Performers ──
+function renderPerformers(){
+  const allItems  = categories.flatMap(c=>c.items);
+  const soldItems = allItems.filter(i=>i.sold);
+  const section   = document.getElementById('performersSection');
+  if(!categories.length){ section.style.display='none'; return; }
+  section.style.display='grid';
+
+  // Top items by price
+  const topItems = [...soldItems].sort((a,b)=>b.price-a.price).slice(0,5);
+  const topItemsEl = document.getElementById('topItemsList');
+  topItemsEl.innerHTML = topItems.length
+    ? topItems.map((item,i)=>`
+        <div class="perf-row">
+          <div class="perf-rank r${i+1}">${i+1}</div>
+          <div class="perf-name">${esc(item.name)}</div>
+          <div class="perf-rev">K${item.price.toFixed(2)}</div>
+        </div>`).join('')
+    : '<div class="perf-empty">No sold items yet</div>';
+
+  // Top categories by revenue
+  const catRevs = categories.map(cat=>({
+    name: cat.name,
+    rev:  cat.items.filter(i=>i.sold).reduce((a,i)=>a+i.price,0),
+    sold: cat.items.filter(i=>i.sold).length,
+    total:cat.items.length
+  })).filter(c=>c.sold>0).sort((a,b)=>b.rev-a.rev).slice(0,5);
+
+  const topCatsEl = document.getElementById('topCatsList');
+  topCatsEl.innerHTML = catRevs.length
+    ? catRevs.map((c,i)=>`
+        <div class="perf-row">
+          <div class="perf-rank r${i+1}">${i+1}</div>
+          <div class="perf-name">${esc(c.name)}</div>
+          <div class="perf-meta">${c.sold}/${c.total}</div>
+          <div class="perf-rev">K${c.rev.toFixed(2)}</div>
+        </div>`).join('')
+    : '<div class="perf-empty">No category sales yet</div>';
+}
+
+// ── Change Calculator ──
+function calcChange(){
+  const totalText = document.getElementById('ctotalTotal').textContent;
+  const total     = parseFloat(totalText.replace('K',''))||0;
+  const given     = parseFloat(document.getElementById('amountGiven').value)||0;
+  const result    = document.getElementById('changeResult');
+  const amtEl     = document.getElementById('changeAmount');
+  const lblEl     = document.getElementById('changeLabel');
+  const iconEl    = document.getElementById('changeIcon');
+  if(!given){ result.classList.remove('show'); return; }
+  const change = given - total;
+  result.classList.add('show');
+  if(change >= 0){
+    result.className = 'change-result show';
+    lblEl.textContent = 'Change to give back';
+    amtEl.textContent = `K${change.toFixed(2)}`;
+    amtEl.style.color = 'var(--green)';
+    iconEl.innerHTML  = '<polyline points="20 6 9 17 4 12"/>';
+    iconEl.style.color= 'var(--green)';
+  } else {
+    result.className = 'change-result show under';
+    lblEl.textContent = 'Amount still owed';
+    amtEl.textContent = `K${Math.abs(change).toFixed(2)}`;
+    amtEl.style.color = 'var(--red)';
+    iconEl.innerHTML  = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+    iconEl.style.color= 'var(--red)';
+  }
+}
+window.calcChange = calcChange;
+
+// ── Mode ──
+function setMode(m){
+  scanMode=m;
+  document.getElementById('modeA').classList.toggle('active',m==='barcode');
+  document.getElementById('modeB').classList.toggle('active',m==='ref');
+  document.getElementById('modeC').classList.toggle('active',m==='lookup');
+  const inp=document.getElementById('mainInput'), hint=document.getElementById('ccHint');
+  if(m==='barcode'){ inp.placeholder='Scan barcode…'; hint.innerHTML='<b>Barcode mode</b> — scan or paste barcode ID. Referral numbers also accepted.'; }
+  else if(m==='ref'){ inp.placeholder='Enter referral number e.g. SHO-001-K25.00'; hint.innerHTML='<b>Referral mode</b> — type the referral number. Barcodes also accepted.'; }
+  else{ inp.placeholder='Type any code to look up item details…'; hint.innerHTML='<b>Lookup mode</b> — preview item without marking as sold.'; }
+  inp.focus();
+}
+window.setMode = setMode;
+
+// ── Resolve ──
+function resolveCode(raw){
+  const code=raw.trim().toUpperCase(); if(!code) return null;
+  for(const cat of categories){
+    // 1. Match by product barcode (scanned when listing)
+    let item=cat.items.find(i=>i.barcode && i.barcode.toUpperCase()===code);
+    if(item) return{item,cat,by:'product barcode'};
+    // 2. Match by system barcode ID
+    item=cat.items.find(i=>i.id===code);
+    if(item) return{item,cat,by:'system barcode'};
+    // 3. Match by referral number
+    item=cat.items.find(i=>(i.ref||'').toUpperCase()===code);
+    if(item) return{item,cat,by:'referral number'};
+  }
+  return null;
+}
+
+// ── Handle Input ──
+async function handleInput(){
+  const raw=document.getElementById('mainInput').value.trim();
+  document.getElementById('mainInput').value='';
+  if(!raw) return;
+  const found=resolveCode(raw);
+  if(scanMode==='lookup'){
+    if(!found) setStatus('fail','Not Found',`"${raw.toUpperCase()}" — barcode not listed in system.`);
+    else{ const s=found.item.sold?'Already Exited':'Available'; setStatus('idle',found.item.name,`Price: K${found.item.price.toFixed(2)}  ·  Ref: ${found.item.ref||'—'}  ·  ${found.cat.name}  ·  ${s}`); }
+    resetAfter(6000); document.getElementById('mainInput').focus(); return;
+  }
+  if(!found){
+    setStatus('fail','Not Found',`"${raw.toUpperCase()}" — this barcode is not in the system. List the item first.`);
+  } else if(found.item.sold){
+    setStatus('fail','Already Exited',
+      `"${found.item.name}" has already been sold and exited the system.\nRef: ${found.item.ref||'—'}  ·  ${found.cat.name}  ·  K${found.item.price.toFixed(2)}`);
+    showBanner(found.item, found.cat, true);
+  } else{
+    found.item.sold=true; await saveData();
+    await recordSummaryTx(found.item, found.cat);
+    addToCustomerTotal(found.item, found.cat);
+    setStatus('ok','Sale Confirmed',`"${found.item.name}" — ${found.cat.name} — K${found.item.price.toFixed(2)} — via ${found.by}`);
+    showBanner(found.item,found.cat, false);
+  }
+  resetAfter(5000); document.getElementById('mainInput').focus();
+}
+window.handleInput = handleInput;
+
+// ── Status ──
+const SD_ICONS={
+  idle:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--tx3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="3" height="3"/><rect x="14" y="7" width="3" height="3"/><rect x="7" y="14" width="3" height="3"/><rect x="14" y="14" width="3" height="3"/></svg>`,
+  ok:  `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  fail:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+};
+function setStatus(type,title,detail){
+  document.getElementById('statusCard').className='status-card '+type;
+  document.getElementById('scIcon').innerHTML=SD_ICONS[type];
+  document.getElementById('scTitle').textContent=title;
+  document.getElementById('scDetail').textContent=detail;
+}
+function resetAfter(ms){ clearTimeout(resetTimer); resetTimer=setTimeout(()=>setStatus('idle','Ready to Scan','Scan a barcode or enter a referral number below'),ms); }
+
+// ── Customer Total ──
+function addToCustomerTotal(item, cat) {
+  customerItems.push({ name: item.name, cat: cat.name, price: item.price });
+  renderCustomerTotal();
+}
+
+function renderCustomerTotal() {
+  const count = customerItems.length;
+  const total = customerItems.reduce((a, i) => a + i.price, 0);
+
+  document.getElementById('ctotalCount').textContent =
+    count === 0 ? '0 items' : `${count} item${count !== 1 ? 's' : ''}`;
+
+  const emptyEl = document.getElementById('ctotalEmpty');
+  const listEl  = document.getElementById('ctotalList');
+
+  if (count === 0) {
+    emptyEl.style.display = 'flex';
+    listEl.style.display  = 'none';
+    listEl.innerHTML      = '';
+  } else {
+    emptyEl.style.display = 'none';
+    listEl.style.display  = 'block';
+    listEl.innerHTML = customerItems.map((it, idx) => `
+      <div class="ctotal-item">
+        <span class="ctotal-item-num">${idx + 1}</span>
+        <span class="ctotal-item-name">${esc(it.name)}</span>
+        <span class="ctotal-item-cat">${esc(it.cat)}</span>
+        <span class="ctotal-item-price">K${it.price.toFixed(2)}</span>
+      </div>`).join('');
+    // auto-scroll to latest
+    listEl.scrollTop = listEl.scrollHeight;
+  }
+
+  // update total with a little bump animation
+  const totalEl = document.getElementById('ctotalTotal');
+  totalEl.textContent = `K${total.toFixed(2)}`;
+  totalEl.classList.remove('bump');
+  void totalEl.offsetWidth;
+  if (count > 0) totalEl.classList.add('bump');
+  setTimeout(() => totalEl.classList.remove('bump'), 300);
+
+  // Show/hide change calculator
+  const calcEl = document.getElementById('changeCalc');
+  if(calcEl){ calcEl.classList.toggle('show', count > 0); if(count > 0) calcChange(); }
+}
+
+function resetCustomerTotal() {
+  if (customerItems.length > 0 && !confirm('Clear customer total and start a new customer?')) return;
+  customerItems = [];
+  const gi = document.getElementById('amountGiven');
+  if(gi) gi.value = '';
+  const cr = document.getElementById('changeResult');
+  if(cr) cr.classList.remove('show');
+  renderCustomerTotal();
+  toast('Customer total cleared — ready for next customer');
+}
+window.resetCustomerTotal = resetCustomerTotal;
+
+// ── Stats & Browser ──
+function renderStats(){
+  const total=categories.reduce((a,c)=>a+c.items.length,0);
+  const sold=categories.reduce((a,c)=>a+c.items.filter(i=>i.sold).length,0);
+  const revenue=categories.reduce((a,c)=>a+c.items.filter(i=>i.sold).reduce((b,i)=>b+i.price,0),0);
+  document.getElementById('statGrid').innerHTML=`
+    <div class="stat-box"><div class="sb-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg> Items</div><div class="sb-val">${total}</div></div>
+    <div class="stat-box"><div class="sb-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Sold</div><div class="sb-val green">${sold}</div></div>
+    <div class="stat-box"><div class="sb-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Available</div><div class="sb-val">${total-sold}</div></div>
+    <div class="stat-box"><div class="sb-label"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Revenue</div><div class="sb-val gold">K${revenue.toFixed(2)}</div></div>`;
+  renderPerformers();
+}
+
+function renderCatBrowser(){
+  const q=(document.getElementById('cbSearch').value||'').toLowerCase();
+  const list=document.getElementById('cbList');
+  const cnt=document.getElementById('cbCount');
+  let total=0,visible=0,html='';
+  categories.forEach(cat=>{
+    const matches=cat.items.filter(i=>!q||i.name.toLowerCase().includes(q)||(i.ref||'').toLowerCase().includes(q));
+    if(!matches.length) return;
+    total+=cat.items.length; visible+=matches.length;
+    html+=`<div class="cb-cat-name">${esc(cat.name)}</div>`;
+    matches.forEach(item=>{
+      html+=`<div class="cb-item ${item.sold?'sold':''}" onclick="clickItem('${item.id}')">
+        <span class="${item.sold?'cb-sold-dot':'cb-avail-dot'}"></span>
+        <span class="cb-item-name">${esc(item.name)}</span>
+        <span class="cb-item-ref">${item.ref||'—'}</span>
+        <span class="cb-item-price">K${item.price.toFixed(2)}</span>
+      </div>`;
+    });
+  });
+  list.innerHTML=html||'<div style="padding:20px 18px;font-size:12px;color:var(--tx3);text-align:center">No items found</div>';
+  cnt.textContent=q?`${visible} match${visible!==1?'es':''}`:`${total} items`;
+}
+window.renderCatBrowser = renderCatBrowser;
+
+function clickItem(itemId){
+  for(const cat of categories){
+    const item=cat.items.find(i=>i.id===itemId);
+    if(item){ showPreview(item,cat,false); setStatus('idle','Item Selected',`"${item.name}" — tap Mark as Sold to checkout.`); document.querySelector('.main-panel').scrollIntoView({behavior:'smooth'}); return; }
+  }
+}
+window.clickItem = clickItem;
+
+function showPreview(item,cat,justSold){
+  const el=document.getElementById('itemPreview'); el.classList.add('visible');
+  document.getElementById('ipName').textContent=item.name;
+  document.getElementById('ipPrice').textContent='K'+item.price.toFixed(2);
+  document.getElementById('ipCat').textContent=cat.name;
+  document.getElementById('ipRef').textContent=item.ref||'—';
+  const st=document.getElementById('ipStatus');
+  st.innerHTML=item.sold?'<span class="ip-status-sold">Sold</span>':'<span class="ip-status-avail">Available</span>';
+  const act=document.getElementById('ipAction');
+  act.innerHTML=item.sold
+    ?`<div class="ip-already-sold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> This item has been sold</div>`
+    :`<button class="ip-sell-btn" onclick="quickSell('${item.id}')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Mark as Sold — K${item.price.toFixed(2)}</button>`;
+}
+function hidePreview(){ document.getElementById('itemPreview').classList.remove('visible'); }
+
+async function quickSell(itemId){
+  for(const cat of categories){
+    const item=cat.items.find(i=>i.id===itemId);
+    if(item&&!item.sold){
+      item.sold=true; await saveData();
+      await recordSummaryTx(item, cat);
+      addToCustomerTotal(item, cat);
+      setStatus('ok','Sale Confirmed',`"${item.name}" — K${item.price.toFixed(2)} — marked as sold.`);
+      showPreview(item,cat,true); showBanner(item,cat);
+      clearTimeout(resetTimer); resetTimer=setTimeout(()=>{setStatus('idle','Ready to Scan','Scan a barcode or enter a referral number below');hidePreview();},5000);
+      return;
+    }
+  }
+}
+window.quickSell = quickSell;
+
+// ── Banner ──
+function showBanner(item,cat,alreadyExited){
+  clearTimeout(bannerTimer);
+  const bar=document.getElementById('sbnBar');
+  const banner=document.getElementById('soldBanner');
+  document.getElementById('sbnName').textContent=item.name;
+  document.getElementById('sbnMeta').textContent=`${item.ref||'—'}  ·  ${cat.name}`;
+  document.getElementById('sbnPrice').textContent='K'+item.price.toFixed(2);
+  // Red tint for already-exited, green for fresh sale
+  banner.style.borderColor = alreadyExited ? 'rgba(239,68,68,.4)' : 'rgba(34,197,94,.3)';
+  const label = banner.querySelector('.sbn-label');
+  if(label) label.innerHTML = alreadyExited
+    ? `<span class="sbn-dot" style="background:#ef4444"></span> Already Exited`
+    : `<span class="sbn-dot"></span> Item Sold Out`;
+  bar.classList.remove('run'); void bar.offsetWidth;
+  banner.classList.add('show'); bar.classList.add('run');
+  bannerTimer=setTimeout(closeBanner,alreadyExited?6000:4200);
+}
+function closeBanner(){ clearTimeout(bannerTimer); document.getElementById('soldBanner').classList.remove('show'); document.getElementById('sbnBar').classList.remove('run'); }
+window.closeBanner = closeBanner;
+
+// ── Camera Barcode Scanner ──
+let _camStream  = null;
+let _camRAF     = null;
+let _camActive  = false;
+let _torchOn    = false;
+let _zbar       = null;
+
+async function initZbar() {
+  if (_zbar) return _zbar;
+  if (window.ZBarWasm) { _zbar = await window.ZBarWasm.getDefaultScanner(); return _zbar; }
+  return null;
+}
+
+async function openCamera() {
+  _camActive = true;
+  document.getElementById('camOverlay').classList.add('open');
+  try {
+    _camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal:'environment' }, width:{ ideal:1920 }, height:{ ideal:1080 } }
+    });
+    const video = document.getElementById('camVideo');
+    video.srcObject = _camStream;
+    await video.play();
+
+    const canvas = document.createElement('canvas');
+    const ctx    = canvas.getContext('2d', { willReadFrequently:true });
+    const useNative = ('BarcodeDetector' in window);
+    let detector = null;
+    if (useNative) {
+      detector = new BarcodeDetector({
+        formats:['code_128','code_39','code_93','ean_13','ean_8','upc_a','upc_e','qr_code','data_matrix','itf','codabar']
+      });
+    } else {
+      await initZbar();
+    }
+
+    let lastScan = 0;
+    async function tick() {
+      if (!_camActive) return;
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        const now = Date.now();
+        if (now - lastScan > 200) {
+          lastScan = now;
+          let code = null;
+          try {
+            if (useNative && detector) {
+              const r = await detector.detect(canvas);
+              if (r.length > 0) code = r[0].rawValue;
+            } else if (_zbar) {
+              const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+              const s   = await _zbar.scanImageData(img);
+              if (s.length > 0) code = s[0].decode();
+            } else {
+              const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+              const qr  = jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
+              if (qr) code = qr.data;
+            }
+          } catch(e){}
+          if (code) {
+            const fl = document.getElementById('camFlash');
+            if (fl) { fl.classList.add('flash'); setTimeout(()=>fl.classList.remove('flash'),180); }
+            _camActive = false; cancelAnimationFrame(_camRAF);
+            document.getElementById('mainInput').value = code;
+            closeCamera();
+            setTimeout(() => handleInput(), 120);
+            return;
+          }
+        }
+      }
+      _camRAF = requestAnimationFrame(tick);
+    }
+    _camRAF = requestAnimationFrame(tick);
+  } catch(e) {
+    closeCamera();
+    alert('Camera access denied or not available.\n\nPlease:\n1. Open via salespros.netlify.app\n2. Allow camera permission\n3. Try again');
+  }
+}
+
+function closeCamera() {
+  _camActive = false; cancelAnimationFrame(_camRAF);
+  if (_camStream) { _camStream.getTracks().forEach(t=>t.stop()); _camStream=null; }
+  _torchOn = false;
+  document.getElementById('camOverlay').classList.remove('open');
+  const tb = document.getElementById('torchBtn'); if(tb) tb.classList.remove('on');
+}
+
+async function toggleTorch() {
+  if (!_camStream) return;
+  const track = _camStream.getVideoTracks()[0]; if (!track) return;
+  try {
+    _torchOn = !_torchOn;
+    await track.applyConstraints({ advanced:[{ torch:_torchOn }] });
+    document.getElementById('torchBtn').classList.toggle('on', _torchOn);
+  } catch(e) { document.getElementById('torchBtn').style.display='none'; }
+}
+
+window.openCamera  = openCamera;
+window.closeCamera = closeCamera;
+window.toggleTorch = toggleTorch;
+
+window.openCamera  = openCamera;
+window.closeCamera = closeCamera;
+window.toggleTorch = toggleTorch;
+
+// ════════════════════════════════════════
+// TRANSACTION SUMMARY
+// ════════════════════════════════════════
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function summaryFbKey(){ return `summary/${emailToKey(currentUser.email)}/${todayKey()}`; }
+
+async function recordSummaryTx(item, cat){
+  const snap = await get(ref(db, summaryFbKey()));
+  const data = snap.exists() ? snap.val() : { date:todayKey(), transactions:[] };
+  data.transactions.push({
+    time:new Date().toISOString(),
+    itemId:item.id, itemName:item.name,
+    barcode:item.barcode||null, ref:item.ref||null,
+    price:item.price, catId:cat.id, catName:cat.name
+  });
+  await set(ref(db, summaryFbKey()), data);
+}
+
+function toggleSummaryPanel(){
+  const panel = document.getElementById('sumPanel');
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open', !isOpen);
+  if(!isOpen) renderSummaryScanner();
+}
+window.toggleSummaryPanel = toggleSummaryPanel;
+
+async function renderSummaryScanner(){
+  document.getElementById('sumDateBadge').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+  const snap = await get(ref(db, summaryFbKey()));
+  const txs  = snap.exists() ? (snap.val().transactions||[]) : [];
+
+  const totalSales  = txs.length;
+  const totalRev    = txs.reduce((a,t)=>a+t.price, 0);
+  const uniqueItems = new Set(txs.map(t=>t.itemId)).size;
+  const uniqueCats  = new Set(txs.map(t=>t.catId)).size;
+
+  document.getElementById('sumStatRow').innerHTML = `
+    <div class="sum-s"><div class="sl">Sales Today</div><div class="sv green">${totalSales}</div></div>
+    <div class="sum-s"><div class="sl">Revenue</div><div class="sv gold">K${totalRev.toFixed(2)}</div></div>
+    <div class="sum-s"><div class="sl">Items Sold</div><div class="sv pur">${uniqueItems}</div></div>
+    <div class="sum-s"><div class="sl">Categories</div><div class="sv">${uniqueCats}</div></div>`;
+
+  const content = document.getElementById('sumContent');
+  if(!txs.length){
+    content.innerHTML = `<div class="sum-empty-s">No sales recorded today yet.</div>`;
+    document.getElementById('sumResetNote').textContent = '';
+    return;
+  }
+
+  // Group by category → item
+  const byCat = {};
+  txs.forEach(tx=>{
+    if(!byCat[tx.catId]) byCat[tx.catId]={ name:tx.catName, items:{} };
+    if(!byCat[tx.catId].items[tx.itemId]) byCat[tx.catId].items[tx.itemId]={ name:tx.itemName, ref:tx.ref, price:tx.price, count:0, total:0 };
+    byCat[tx.catId].items[tx.itemId].count++;
+    byCat[tx.catId].items[tx.itemId].total += tx.price;
+  });
+
+  let html = '';
+  Object.values(byCat).sort((a,b)=>a.name.localeCompare(b.name)).forEach(cat=>{
+    const items    = Object.values(cat.items).sort((a,b)=>a.name.localeCompare(b.name));
+    const catTotal = items.reduce((s,i)=>s+i.total, 0);
+    const catCount = items.reduce((s,i)=>s+i.count, 0);
+    html += `<div class="sum-cat-block">
+      <div class="sum-cat-hdr">
+        <span>${esc(cat.name)}</span>
+        <span class="sum-cat-meta-s">${catCount} sold · K${catTotal.toFixed(2)}</span>
+      </div>
+      ${items.map(item=>`
+        <div class="sum-item-row">
+          <span class="sum-item-name">${esc(item.name)}</span>
+          <span class="sum-item-ref">${item.ref||'—'}</span>
+          <span class="sum-item-price">K${item.price.toFixed(2)}</span>
+          <span class="sum-item-qty">${item.count}</span>
+        </div>`).join('')}
+    </div>`;
+  });
+  content.innerHTML = html;
+  document.getElementById('sumResetNote').textContent =
+    `Resets at midnight · Updated ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+async function resetSummaryScanner(){
+  if(!confirm("Reset today's transaction summary?")) return;
+  await set(ref(db, summaryFbKey()), null);
+  renderSummaryScanner();
+  toast('Daily summary reset');
+}
+window.resetSummaryScanner = resetSummaryScanner;
+
+async function exportSummaryPDFScanner(){
+  if(!window.jspdf){ toast('PDF library not loaded yet, please wait…'); return; }
+  const snap = await get(ref(db, summaryFbKey()));
+  const txs  = snap.exists() ? (snap.val().transactions||[]) : [];
+  if(!txs.length){ toast('No transactions to export today'); return; }
+  toast('Generating PDF…');
+
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const W=210, M=14; let y=M;
+
+  // Header
+  doc.setFillColor(15,16,24); doc.rect(0,0,W,38,'F');
+  doc.setTextColor(201,169,74); doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text('SalesPro',M,16);
+  doc.setTextColor(140,145,168); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Daily Transaction Summary — Scanner',M,23);
+  doc.setTextColor(201,169,74); doc.setFontSize(7.5); doc.setFont('helvetica','bold');
+  doc.text('SELLER:',M,30); doc.setTextColor(200,205,220); doc.setFont('helvetica','normal');
+  doc.text(currentUser.name, M+13,30);
+  doc.setTextColor(201,169,74); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('DAILY SUMMARY',W-M,16,{align:'right'});
+  doc.setTextColor(140,145,168); doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  const dateStr = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  doc.text(dateStr,W-M,23,{align:'right'});
+  doc.text(`Generated: ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`,W-M,30,{align:'right'});
+  y=46;
+
+  // Totals banner
+  const totalRev   = txs.reduce((a,t)=>a+t.price, 0);
+  doc.setFillColor(23,26,36); doc.roundedRect(M,y,W-M*2,14,2,2,'F');
+  doc.setTextColor(201,169,74); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text(`Total Revenue: K${totalRev.toFixed(2)}    Transactions: ${txs.length}    Items: ${new Set(txs.map(t=>t.itemId)).size}`,M+4,y+9);
+  y+=22;
+
+  // Group by category
+  const byCat={};
+  txs.forEach(tx=>{
+    if(!byCat[tx.catId]) byCat[tx.catId]={name:tx.catName,items:{}};
+    if(!byCat[tx.catId].items[tx.itemId]) byCat[tx.catId].items[tx.itemId]={name:tx.itemName,ref:tx.ref,price:tx.price,count:0,total:0};
+    byCat[tx.catId].items[tx.itemId].count++;
+    byCat[tx.catId].items[tx.itemId].total+=tx.price;
+  });
+
+  let grandTotal=0, grandCount=0;
+  Object.values(byCat).sort((a,b)=>a.name.localeCompare(b.name)).forEach(cat=>{
+    if(y>260){doc.addPage();y=M;}
+    // Category band
+    doc.setFillColor(31,34,50); doc.roundedRect(M,y,W-M*2,9,2,2,'F');
+    doc.setTextColor(201,169,74); doc.setFontSize(9.5); doc.setFont('helvetica','bold');
+    doc.text(cat.name.toUpperCase(),M+4,y+6.2);
+    const catTotal=Object.values(cat.items).reduce((s,i)=>s+i.total,0);
+    const catCount=Object.values(cat.items).reduce((s,i)=>s+i.count,0);
+    grandTotal+=catTotal; grandCount+=catCount;
+    doc.setFontSize(7.5); doc.setTextColor(140,145,168);
+    doc.text(`${catCount} sold · K${catTotal.toFixed(2)}`,W-M-2,y+6.2,{align:'right'});
+    y+=13;
+    // Column headers
+    doc.setFillColor(20,22,32); doc.rect(M,y,W-M*2,7,'F');
+    doc.setTextColor(92,98,120); doc.setFontSize(6.8); doc.setFont('helvetica','bold');
+    doc.text('ITEM',M+2,y+5); doc.text('REF. NO.',M+70,y+5);
+    doc.text('UNIT PRICE',M+110,y+5); doc.text('QTY',M+145,y+5); doc.text('TOTAL',M+162,y+5);
+    y+=10;
+    // Item rows
+    Object.values(cat.items).sort((a,b)=>a.name.localeCompare(b.name)).forEach(item=>{
+      if(y>268){doc.addPage();y=M;}
+      doc.setFillColor(15,16,24); doc.rect(M,y-2,W-M*2,9,'F');
+      doc.setTextColor(220,222,230); doc.setFontSize(8); doc.setFont('helvetica','normal');
+      doc.text(item.name.length>28?item.name.slice(0,27)+'…':item.name,M+2,y+4.5);
+      doc.setTextColor(79,179,212); doc.setFontSize(7);
+      doc.text(item.ref||'—',M+70,y+4.5);
+      doc.setTextColor(201,169,74); doc.setFontSize(8);
+      doc.text('K'+item.price.toFixed(2),M+110,y+4.5);
+      doc.setFillColor(15,42,25); doc.roundedRect(M+142,y-1,14,7,2,2,'F');
+      doc.setTextColor(76,175,110); doc.setFont('helvetica','bold');
+      doc.text(String(item.count),M+149,y+4.5,{align:'center'});
+      doc.setTextColor(201,169,74);
+      doc.text('K'+item.total.toFixed(2),M+162,y+4.5);
+      y+=10;
+    });
+    // Category total
+    doc.setFillColor(23,26,36); doc.rect(M,y-1,W-M*2,9,'F');
+    doc.setTextColor(201,169,74); doc.setFontSize(8); doc.setFont('helvetica','bold');
+    doc.text('Category Total',M+2,y+5.2);
+    doc.text(String(catCount),M+149,y+5.2,{align:'center'});
+    doc.text('K'+catTotal.toFixed(2),M+162,y+5.2);
+    y+=16;
+  });
+
+  // Grand total
+  if(y>265){doc.addPage();y=M;}
+  doc.setFillColor(31,34,50); doc.roundedRect(M,y,W-M*2,11,2,2,'F');
+  doc.setTextColor(201,169,74); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('GRAND TOTAL',M+4,y+7.5);
+  doc.text(`${grandCount} transactions`,M+80,y+7.5);
+  doc.text('K'+grandTotal.toFixed(2),W-M-4,y+7.5,{align:'right'});
+  y+=18;
+  doc.setDrawColor(40,44,60); doc.setLineWidth(0.3); doc.line(M,y,W-M,y);
+  doc.setTextColor(72,78,100); doc.setFontSize(6.5); doc.setFont('helvetica','normal');
+  doc.text(`SalesPro · Daily Summary · ${dateStr}`,M,y+5);
+  doc.text('Generated by SalesPro Scanner',W-M,y+5,{align:'right'});
+  doc.save(`Summary_${todayKey()}.pdf`);
+  toast('Summary PDF downloaded');
+}
+window.exportSummaryPDFScanner = exportSummaryPDFScanner;
+
+function toast(msg){
+  let t=document.getElementById('snToast');
+  if(!t){ t=document.createElement('div'); t.id='snToast';
+    t.style.cssText='position:fixed;bottom:24px;right:16px;background:var(--s2);border:1px solid rgba(148,0,211,.3);color:var(--tx);padding:10px 16px;border-radius:10px;font-size:12.5px;font-weight:500;z-index:300;transform:translateY(60px);opacity:0;transition:all .25s;display:flex;align-items:center;gap:7px;box-shadow:0 8px 24px rgba(0,0,0,.4);';
+    document.body.appendChild(t);
+  }
+  t.innerHTML=`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>${esc(msg)}`;
+  t.style.transform='translateY(0)'; t.style.opacity='1';
+  setTimeout(()=>{ t.style.transform='translateY(60px)'; t.style.opacity='0'; },3000);
+}
+
+// ── Boot ──
+(async function boot(){
+  const session=getSession();
+  if(session){
+    const user=await fbGetUser(session);
+    if(user&&(user.status==='approved'||!user.status)){currentUser=user;enterApp();return;}
+    clearSes();
+  }
+  setTimeout(()=>document.getElementById('acEmail').focus(),120);
+})();
+</script>
+</body>
+</html>
